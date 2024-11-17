@@ -1,10 +1,30 @@
-import kagglehub
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+# Load dataset
 df = pd.read_csv("mxmh_survey_results.csv")
 
+# Handle missing values
+df.fillna(0, inplace=True)
+
+# Ensure Age is numeric
+df['Age'] = pd.to_numeric(df['Age'], errors='coerce')
+
+# Convert genre frequencies to numeric values
+genres = ['Frequency [Classical]', 'Frequency [EDM]', 'Frequency [Hip hop]', 'Frequency [Rock]', 'Frequency [Pop]']
+mental_health_conditions = ['Anxiety', 'Depression', 'Insomnia', 'OCD']
+
+frequency_mapping = {
+    "Never": 0,
+    "Rarely": 1,
+    "Sometimes": 2,
+    "Frequently": 3,
+    "Very frequently": 4
+}
+
+for genre in genres:
+    df[genre] = df[genre].map(frequency_mapping).fillna(0)
 
 # Plot 1: Age Distribution
 plt.figure(figsize=(10, 6))
@@ -33,14 +53,13 @@ plt.xticks(rotation=45)
 plt.show()
 
 # Plot 4: Mental Health and Genre Preference
-genres = ['Frequency [Classical]', 'Frequency [EDM]', 'Frequency [Hip hop]', 'Frequency [Rock]', 'Frequency [Pop]']
-mental_health_conditions = ['Anxiety', 'Depression', 'Insomnia', 'OCD']
+# Reshape the data for the heatmap
+heatmap_data = df[mental_health_conditions + genres].corr().loc[mental_health_conditions, genres]
 
-# Heatmap of genre preference vs mental health conditions
-data = df.groupby(mental_health_conditions)[genres].mean()
+# Plot heatmap
 plt.figure(figsize=(12, 8))
-sns.heatmap(data.T, cmap='coolwarm', annot=True)
+sns.heatmap(heatmap_data, annot=True, cmap='coolwarm', fmt=".2f")
 plt.title('Music Preferences vs Mental Health Conditions')
-plt.xlabel('Mental Health Conditions')
-plt.ylabel('Genres')
+plt.xlabel('Music Genres')
+plt.ylabel('Mental Health Conditions')
 plt.show()
